@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { BIKES, CATEGORIES } from "@/data/bikes";
 import BikeCard from "./BikeCard";
 import SearchBar from "./SearchBar";
@@ -12,21 +13,27 @@ interface BikeGridProps {
   initialQuery?: string;
 }
 
-export default function BikeGrid({
+function BikeGridInner({
   initialCategory = "ALL",
   initialQuery = "",
 }: BikeGridProps) {
-  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory || "ALL");
-  const [searchQuery, setSearchQuery] = useState<string>(initialQuery || "");
+  const searchParams = useSearchParams();
+  const urlCategory = searchParams.get("category");
+  const urlQuery = searchParams.get("q");
+
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    urlCategory || initialCategory || "ALL"
+  );
+  const [searchQuery, setSearchQuery] = useState<string>(urlQuery || initialQuery || "");
   const [sortBy, setSortBy] = useState<SortOption>("AZ");
 
   useEffect(() => {
-    setSelectedCategory(initialCategory || "ALL");
-  }, [initialCategory]);
+    setSelectedCategory(urlCategory || initialCategory || "ALL");
+  }, [urlCategory, initialCategory]);
 
   useEffect(() => {
-    setSearchQuery(initialQuery || "");
-  }, [initialQuery]);
+    setSearchQuery(urlQuery || initialQuery || "");
+  }, [urlQuery, initialQuery]);
 
   const filteredBikes = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -135,5 +142,21 @@ export default function BikeGrid({
         </div>
       )}
     </div>
+  );
+}
+
+export default function BikeGrid(props: BikeGridProps) {
+  return (
+    <Suspense
+      fallback={
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {BIKES.slice(0, 8).map((bike) => (
+            <BikeCard key={bike.id} bike={bike} />
+          ))}
+        </div>
+      }
+    >
+      <BikeGridInner {...props} />
+    </Suspense>
   );
 }

@@ -8,11 +8,7 @@ export const metadata: Metadata = {
     "Browse all 30 mountain bikes across six categories at PRATYUSH WORLD: All-Mountain, Enduro, Trail, Downhill & Freeride, Hardtail, and Cross-Country (XC).",
 };
 
-export default function BikesPage({
-  searchParams,
-}: {
-  searchParams?: { category?: string; q?: string };
-}) {
+export default function BikesPage() {
   return (
     <div className="bg-[#0B0D0C] text-white min-h-screen">
       <div className="border-b border-white/10 bg-[#151917]/60 py-14">
@@ -30,10 +26,7 @@ export default function BikesPage({
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <BikeGrid
-          initialCategory={searchParams?.category || "ALL"}
-          initialQuery={searchParams?.q || ""}
-        />
+        <BikeGrid />
       </div>
     </div>
   );

@@ -33,7 +33,7 @@ export interface BikeModel {
   featured?: boolean;
 }
 
-export const BIKE_FALLBACK_IMAGE = "/images/bike-fallback.svg";
+export const BIKE_FALLBACK_IMAGE = `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/images/bike-fallback.svg`;
 
 export const CATEGORIES: BikeCategory[] = [
   {

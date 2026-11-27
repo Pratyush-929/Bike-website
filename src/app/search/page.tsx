@@ -7,11 +7,7 @@ export const metadata: Metadata = {
   description: "Search all 30 mountain bikes by model, manufacturer, brand, or category.",
 };
 
-export default function SearchPage({
-  searchParams,
-}: {
-  searchParams?: { q?: string };
-}) {
+export default function SearchPage() {
   return (
     <div className="bg-[#0B0D0C] text-white min-h-screen py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
@@ -24,7 +20,7 @@ export default function SearchPage({
           </h1>
         </div>
 
-        <BikeGrid initialQuery={searchParams?.q || ""} />
+        <BikeGrid />
       </div>
     </div>
   );

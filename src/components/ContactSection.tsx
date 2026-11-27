@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Send, CheckCircle2, AlertCircle, Loader2, MessageSquare } from "lucide-react";
 
-const WHATSAPP_FALLBACK_NUMBER = "9779864004444";
+const WHATSAPP_NUMBER = "9779864004444";
 
 export default function ContactSection() {
   const [fullName, setFullName] = useState("");
@@ -15,6 +15,7 @@ export default function ContactSection() {
   const [successInfo, setSuccessInfo] = useState<{
     inquiryCode: string;
     whatsAppUrl: string;
+    savedToDb: boolean;
   } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,64 +45,65 @@ export default function ContactSection() {
     }
 
     setLoading(true);
-    // Open tab synchronously within user click gesture so popup blockers allow WhatsApp launch
     const waWindow = window.open("about:blank", "_blank");
     if (waWindow) {
       waWindow.opener = null;
     }
 
-    try {
-      const res = await fetch("/api/inquiries", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName: cleanName,
-          email: cleanEmail,
-          subject: cleanSubject,
-          message: cleanMessage,
-          inquiryType: "GENERAL",
-        }),
-      });
+    const isStatic = process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
+    let inquiryCode = `INQ-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    let savedToDb = false;
 
-      const data = await res.json();
-      if (!res.ok) {
-        if (waWindow) waWindow.close();
-        throw new Error(data.error || "Unable to save your message.");
-      }
-
-      const fallbackText = [
-        `Hello PRATYUSH WORLD, I have a new contact message (${data.inquiryCode}):`,
+    const buildWhatsAppUrl = (code: string) => {
+      const prefilledText = [
+        `Hello PRATYUSH WORLD, I have a new contact message (${code}):`,
         `Name: ${cleanName}`,
         `Email: ${cleanEmail}`,
         `Subject: ${cleanSubject}`,
         `Message: ${cleanMessage}`,
       ].join("\n");
+      return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(prefilledText)}`;
+    };
 
-      const whatsAppUrl =
-        data.whatsAppUrl ||
-        `https://wa.me/${WHATSAPP_FALLBACK_NUMBER}?text=${encodeURIComponent(fallbackText)}`;
+    let whatsAppUrl = buildWhatsAppUrl(inquiryCode);
 
-      setSuccessInfo({
-        inquiryCode: data.inquiryCode,
-        whatsAppUrl,
-      });
-
-      if (waWindow) {
-        waWindow.location.href = whatsAppUrl;
-      } else {
-        window.open(whatsAppUrl, "_blank", "noopener,noreferrer");
+    if (!isStatic) {
+      try {
+        const res = await fetch("/api/inquiries", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fullName: cleanName,
+            email: cleanEmail,
+            subject: cleanSubject,
+            message: cleanMessage,
+            inquiryType: "GENERAL",
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          inquiryCode = data.inquiryCode || inquiryCode;
+          whatsAppUrl = data.whatsAppUrl || buildWhatsAppUrl(inquiryCode);
+          savedToDb = true;
+        }
+      } catch {
+        // Static hosting fallback: proceed straight to WhatsApp
       }
-
-      setFullName("");
-      setEmail("");
-      setSubject("");
-      setMessage("");
-    } catch (err: unknown) {
-      if (waWindow && !waWindow.closed) waWindow.close();
-      setError(err instanceof Error ? err.message : "An error occurred while submitting.");
-    } finally {
-      setLoading(false);
     }
+
+    setSuccessInfo({ inquiryCode, whatsAppUrl, savedToDb });
+
+    if (waWindow) {
+      waWindow.location.href = whatsAppUrl;
+    } else {
+      window.open(whatsAppUrl, "_blank", "noopener,noreferrer");
+    }
+
+    setFullName("");
+    setEmail("");
+    setSubject("");
+    setMessage("");
+    setLoading(false);
   };
 
   return (
@@ -130,9 +132,10 @@ export default function ContactSection() {
                   Ready to Send on WhatsApp
                 </h3>
                 <p className="text-xs sm:text-sm text-[#A1A1AA] max-w-md mx-auto leading-relaxed">
-                  Your message has been logged under reference{" "}
-                  <strong className="text-white font-mono">{successInfo.inquiryCode}</strong> and WhatsApp was launched for{" "}
-                  <strong className="text-white">+977 9864004444</strong>. If WhatsApp did not open automatically, click the button below.
+                  Reference{" "}
+                  <strong className="text-white font-mono">{successInfo.inquiryCode}</strong>{" "}
+                  {successInfo.savedToDb ? "was logged in our database and " : ""}
+                  WhatsApp was launched for <strong className="text-white">+977 9864004444</strong>. If WhatsApp did not open automatically, click below.
                 </p>
               </div>
 
@@ -241,7 +244,7 @@ export default function ContactSection() {
 
               <p className="text-[11px] text-[#A1A1AA] text-center flex items-center justify-center gap-1.5">
                 <MessageSquare className="w-3.5 h-3.5 text-[#4CAF50]" />
-                <span>Opens WhatsApp (+977 9864004444) with your pre-filled message and saves a record locally.</span>
+                <span>Opens WhatsApp (+977 9864004444) with your pre-filled message ready to send.</span>
               </p>
             </form>
           )}
