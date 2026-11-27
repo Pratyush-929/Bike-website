@@ -1,0 +1,178 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         String    @default("STAFF") // "SUPER_ADMIN", "MANAGER", "STAFF"
+  status       String    @default("ACTIVE") // "ACTIVE", "SUSPENDED"
+  avatar       String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  auditLogs    AuditLog[]
+}
+
+model CompanySetting {
+  id                           String   @id @default("default")
+  brandName                    String   @default("TERRA CYCLES")
+  tagline                      String   @default("Built for the Trails. Ready for Anything.")
+  logoUrl                      String   @default("/brand-logo.svg")
+  faviconUrl                   String?
+  companyDescription          String   @default("Engineered for extreme descents, technical climbs, and rugged alpine trails. Professional mountain bike manufacturer and technical workshop.")
+  aboutMission                 String   @default("To craft world-class mountain bikes and components that empower riders to conquer the wildest terrain with uncompromising confidence and performance.")
+  aboutVision                  String   @default("Pioneering progressive geometry, sustainable manufacturing, and elite trail engineering across the global mountain biking community.")
+  aboutPhilosophy              String   @default("Tested on brutal alpine rock gardens, refined in precision wind tunnels and workshop bays. Every weld, linkage bearing, and suspension tune is dialed for peak trail performance.")
+  contactEmail                 String   @default("trailside@terracycles.com")
+  contactPhone                 String   @default("+1 (541) 555-8724")
+  whatsappNumber               String   @default("+15415558724")
+  physicalAddress              String   @default("442 Ridgeback Trail Road, Hood River, OR 97031")
+  businessHours                String   @default("Mon - Fri: 8:30 AM - 6:00 PM | Sat: 9:00 AM - 5:00 PM | Sun: Closed (Out Riding)")
+  currencyCode                 String   @default("USD")
+  currencySymbol               String   @default("$")
+  heroHeadline                 String   @default("Built for the Trails. Ready for Anything.")
+  heroSubheadline              String   @default("Precision-engineered enduro, trail, and downhill mountain bikes tested on the world's most unforgiving backcountry singletrack.")
+  heroImageUrl                 String   @default("https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=2000&q=80")
+  lowStockThresholdDefault     Int      @default(3)
+  emailNotificationsEnabled     Boolean  @default(false)
+  notificationRecipientEmail    String   @default("inquiries@terracycles.com")
+  smtpHost                     String?
+  smtpPort                     Int?
+  smtpUser                     String?
+  updatedAt                    DateTime @updatedAt
+}
+
+model Category {
+  id           String    @id @default(cuid())
+  name         String
+  slug         String    @unique
+  type         String    // "BIKE", "SPARE_PART", "ACCESSORY", "SERVICE"
+  description  String?
+  imageUrl     String?
+  displayOrder Int       @default(0)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  products     Product[]
+}
+
+model Product {
+  id                    String              @id @default(cuid())
+  sku                   String              @unique
+  name                  String
+  slug                  String              @unique
+  brand                 String              @default("Terra")
+  type                  String              // "BIKE", "SPARE_PART", "ACCESSORY"
+  categoryId            String
+  category              Category            @relation(fields: [categoryId], references: [id])
+  description           String
+  shortDescription      String?
+  priceInCents          Int                 // Stored in minor currency units (cents) to avoid floating point issues
+  compareAtPriceInCents Int?                // Stored in minor currency units for sales/discounts
+  isFeatured            Boolean             @default(false)
+  isPublished           Boolean             @default(true)
+  availabilityStatus    String              @default("IN_STOCK") // "IN_STOCK", "LOW_STOCK", "OUT_OF_STOCK", "COMING_SOON", "DISCONTINUED"
+  primaryImageUrl       String
+  additionalImages      String              @default("[]") // JSON stringified array of URLs
+  specifications        String              @default("{}") // JSON stringified map of key-value pairs
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  inventory             InventoryItem?
+  movements             InventoryMovement[]
+}
+
+model InventoryItem {
+  id               String   @id @default(cuid())
+  productId        String   @unique
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  currentStock     Int      @default(0)
+  reorderThreshold Int      @default(3)
+  supplier         String?
+  location         String?
+  lastUpdated      DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model InventoryMovement {
+  id             String   @id @default(cuid())
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantityChange Int
+  resultingStock Int
+  changeType     String   // "INITIAL", "RESTOCK", "MANUAL_ADJUSTMENT", "SALE", "DAMAGE"
+  reason         String
+  adminUserId    String?
+  createdAt      DateTime @default(now())
+}
+
+model Inquiry {
+  id                     String    @id @default(cuid())
+  inquiryCode            String    @unique // e.g. "INQ-9281"
+  fullName               String
+  email                  String
+  phone                  String?
+  subject                String
+  message                String
+  inquiryType            String    @default("GENERAL") // "GENERAL", "BIKE_PURCHASE", "PARTS_ADVICE", "SERVICE_QUESTION"
+  status                 String    @default("NEW") // "NEW", "READ", "IN_PROGRESS", "RESOLVED", "ARCHIVED"
+  emailNotificationSent  Boolean   @default(false)
+  emailNotificationStatus String   @default("NOT_CONFIGURED") // "SENT", "PENDING", "FAILED", "NOT_CONFIGURED"
+  internalNotes          String?
+  followUpDate           DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+}
+
+model ServiceItem {
+  id                String           @id @default(cuid())
+  name              String
+  slug              String           @unique
+  description       String
+  shortDescription  String?
+  priceInCents      Int?             // Optional standard pricing
+  estimatedDuration String?          // e.g. "1.5 - 2 Hours"
+  imageUrl          String?
+  isEnabled         Boolean          @default(true)
+  displayOrder      Int              @default(0)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  bookings          ServiceBooking[]
+}
+
+model ServiceBooking {
+  id               String       @id @default(cuid())
+  bookingCode      String       @unique // e.g. "SRV-2026-104"
+  serviceId        String
+  service          ServiceItem  @relation(fields: [serviceId], references: [id])
+  customerName     String
+  customerEmail    String
+  customerPhone    String
+  bikeModel        String
+  requestedDate    DateTime
+  requestedTimeSlot String
+  notes            String?
+  status           String       @default("PENDING") // "PENDING", "CONFIRMED", "COMPLETED", "CANCELLED", "REJECTED"
+  internalNotes    String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  userEmail  String?
+  action     String   // e.g. "PRODUCT_CREATE", "STOCK_ADJUSTMENT", "PRICE_UPDATE", "INQUIRY_STATUS_CHANGE"
+  entityType String   // "PRODUCT", "INVENTORY", "INQUIRY", "SERVICE_BOOKING", "SETTINGS", "USER"
+  entityId   String?
+  details    String   // JSON stringified summary of changes
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+}

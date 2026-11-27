@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 60" width="240" height="60" fill="none">
+  <!-- Mountain & Bike Cog Hybrid Icon -->
+  <g transform="translate(10, 8)">
+    <path d="M22 4L38 36H6L22 4Z" stroke="#f97316" stroke-width="3" stroke-linejoin="round" fill="none"/>
+    <path d="M12 24L22 14L32 30" stroke="#36886c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="22" cy="24" r="3" fill="#f97316"/>
+    <path d="M22 36V42M14 40L16 43M30 40L28 43" stroke="#8e9bb0" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <!-- Typography -->
+  <text x="64" y="32" font-family="'Outfit', system-ui, -apple-system, sans-serif" font-weight="900" font-size="22" fill="#ffffff" letter-spacing="2.5">TERRA</text>
+  <text x="64" y="46" font-family="'Inter', system-ui, -apple-system, sans-serif" font-weight="600" font-size="10" fill="#f97316" letter-spacing="4">CYCLES • MTB</text>
+</svg>

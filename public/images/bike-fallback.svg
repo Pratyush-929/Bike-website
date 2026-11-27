@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" fill="none">
+  <rect width="800" height="500" fill="#151917"/>
+  <circle cx="245" cy="325" r="88" stroke="#4CAF50" stroke-width="10"/>
+  <circle cx="245" cy="325" r="14" fill="#A3E635"/>
+  <circle cx="555" cy="325" r="88" stroke="#4CAF50" stroke-width="10"/>
+  <circle cx="555" cy="325" r="14" fill="#A3E635"/>
+  <path d="M245 325L365 205H480L555 325M365 205L410 325H245M480 205L455 155H420M348 180H388" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="400" y="75" text-anchor="middle" fill="#A1A1AA" font-family="system-ui, sans-serif" font-size="20" font-weight="700" letter-spacing="4">PRATYUSH WORLD</text>
+</svg>
